@@ -18,16 +18,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+
 import org.apache.logging.log4j.Level;
+
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.common.asm.FMLSanityChecker;
@@ -153,10 +158,12 @@ public class FMLContainer extends DummyModContainer implements WorldAccessContai
                 else
                 {
                     boolean isItem;
+                    boolean isItemBlock;
                     try {
                         Class<?> clazz = Class.forName(itemType);
                         clazz.asSubclass(Item.class);
                         isItem = true;
+                        isItemBlock = ItemBlock.class.isAssignableFrom(clazz);
                     }
                     catch (ClassNotFoundException cnfs)
                     {
@@ -167,9 +174,13 @@ public class FMLContainer extends DummyModContainer implements WorldAccessContai
                     catch (ClassCastException ccs)
                     {
                         isItem = false;
+                        isItemBlock = false;
                     }
                     String itemLabel = String.format("%c%s:%s", isItem ? '\u0002' : '\u0001', forcedModId != null ? forcedModId : modId, forcedName);
                     dataList.put(itemLabel, itemId);
+                    
+                    if(isItemBlock) dataList.put(String.format("%c%s:%s", '\u0001', forcedModId != null ? forcedModId : modId, forcedName), itemId);
+                    if(!isItem) dataList.put(String.format("%c%s:%s", '\u0002', forcedModId != null ? forcedModId : modId, forcedName), itemId);
                 }
             }
             List<String> failedElements = GameData.injectWorldIDMap(dataList, true, true);
